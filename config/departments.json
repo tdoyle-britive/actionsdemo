@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Sales",
+    "description": "Drive revenue with dynamic, cloud-native privileged access solutions for enterprise teams.",
+    "image": "images/sales.svg"
+  },
+  {
+    "name": "Marketing",
+    "description": "Amplify Britive’s vision of secure, just-in-time access across cloud environments.",
+    "image": "images/marketing.svg"
+  },
+  {
+    "name": "Engineering",
+    "description": "Build the future of identity security with scalable, automated PAM platforms.",
+    "image": "images/engineering.svg"
+  }
+]
