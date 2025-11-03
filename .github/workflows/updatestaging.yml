@@ -34,7 +34,7 @@ jobs:
           pybritive configure update profile-aliases default "AWS/123750444551 (Sigma Stage)/AWS Creative Profile - S3 Full Access"
           cat << EOF > ~/.aws/credentials
           [default]
-          credential_process = pybritive checkout default -m awscredentialprocess -P Github --justification "${{ inputs.justification }}"
+          credential_process = pybritive checkout default -m awscredentialprocess -P github-britive --justification "${{ inputs.justification }}"
           EOF
           aws sts get-caller-identity
 
@@ -47,4 +47,4 @@ jobs:
 
       - name: Check In
         if: always()
-        run: pybritive checkin default -P Github || true
+        run: pybritive checkin default -P github-britive || true
