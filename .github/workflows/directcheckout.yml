@@ -1,0 +1,55 @@
+name: Direct Checkout - Deploy Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      justification:
+        description: 'Reason'
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pybritive
+        run: pip install pybritive
+
+      - name: Checkout AWS Credentials via OIDC
+        env:
+          BRITIVE_TENANT: demo
+          BRITIVE_PROFILE: "AWS/123750444551 (Sigma Stage)/AWS Creative Profile - S3 Full Access"
+          BRITIVE_JUSTIFICATION: ${{ inputs.justification }}
+        run: |
+          # PyBritive auto-uses GitHub OIDC when GITHUB_TOKEN is present
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+
+          # Checkout creds directly (no credential_process, no login)
+          pybritive checkout "$BRITIVE_PROFILE" \
+            --mode env \
+            --justification "$BRITIVE_JUSTIFICATION"
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync . s3://britive-intranet-staging \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --delete
+
+      - name: Check-in
+        if: always()
+        env:
+          BRITIVE_PROFILE: "AWS/123750444551 (Sigma Stage)/AWS Creative Profile - S3 Full Access"
+        run: |
+          pybritive checkin "$BRITIVE_PROFILE" || true
