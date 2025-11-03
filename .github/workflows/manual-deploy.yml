@@ -24,6 +24,7 @@ jobs:
 
       - name: Configure and Checkout Britive Profile
         run: |
+          export PYBRITIVE_FEDERATION_PROVIDER=github
           mkdir -p ~/.aws
           pybritive configure tenant --tenant demo --no-prompt
           pybritive configure global --tenant demo --format json --no-prompt
