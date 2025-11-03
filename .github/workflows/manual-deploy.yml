@@ -1,73 +1,41 @@
-# .github/workflows/manual-deploy.yml
-name: Deploy to Britive Intranet Staging
+name: List S3 Buckets via Britive
 
 on:
   workflow_dispatch:
-    inputs:
-      justification:
-        description: 'Reason for the deployment (audit)'
-        required: true
-        type: string
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  deploy:
+  list-s3:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.9'
 
       - name: Install pybritive
-        run: pip install pybritive
+        run: pip3 install pybritive
 
-      - name: Configure Britive & AWS credentials
-        env:
-          BRITIVE_TENANT: ${{ secrets.BRITIVE_TENANT }}
-          BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
-          BRITIVE_FULL_PROFILE: ${{ secrets.BRITIVE_FULL_PROFILE }}
+      - name: Configure and Checkout Britive Profile
         run: |
-          #pybritive configure tenant --tenant "$BRITIVE_TENANT" --no-prompt
-          #pybritive configure global --tenant "$BRITIVE_TENANT" --format json --no-prompt
+          mkdir -p ~/.aws
           pybritive configure tenant --tenant demo --no-prompt
           pybritive configure global --tenant demo --format json --no-prompt
-          #pybritive configure update profile-aliases default "$BRITIVE_FULL_PROFILE"
-          pybritive configure update profile-aliases default "AWS SE Demo/696226360299 (se-demo)/S3 Bucket Admin"
-      
-          mkdir -p ~/.aws
+          pybritive configure update profile-aliases default "AWS/123750444551 (Sigma Stage)/AWS Creative Profile - S3 Full Access"
           cat << EOF > ~/.aws/credentials
-          [$BRITIVE_PROFILE_ALIAS]
-          credential_process = pybritive checkout default -m awscredentialprocess -P github-britive
+          [default]
+          credential_process=pybritive checkout default -m awscredentialprocess -P github-britive
           EOF
-      
-          aws sts get-caller-identity --profile default
-        shell: bash
+          aws sts get-caller-identity
 
-      - name: Sync site to S3
-        env:
-          S3_BUCKET: ${{ secrets.S3_STAGING_BUCKET }}
-          BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
-        run: |
-          echo "Deploying to $S3_BUCKET ..."
-          aws s3 sync . "$S3_BUCKET" \
-            --profile "$BRITIVE_PROFILE_ALIAS" \
-            --exclude ".git/*" \
-            --exclude ".github/*" \
-            --exclude "node_modules/*" \
-            --delete
-        shell: bash
+      - name: List S3 Buckets
+        run: aws s3 ls
 
-      - name: Check-in Britive profile
-        if: always()
-        env:
-          BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
-        run: |
-          pybritive checkin "$BRITIVE_PROFILE_ALIAS" -P github-britive || true
-        shell: bash
+      - name: Check In Britive Profile
+        run: pybritive checkin default -P github-britive
