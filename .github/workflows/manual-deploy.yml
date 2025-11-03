@@ -38,7 +38,8 @@ jobs:
           #pybritive configure global --tenant "$BRITIVE_TENANT" --format json --no-prompt
           pybritive configure tenant --tenant demo --no-prompt
           pybritive configure global --tenant demo --format json --no-prompt
-          pybritive configure update profile-aliases default "$BRITIVE_FULL_PROFILE"
+          #pybritive configure update profile-aliases default "$BRITIVE_FULL_PROFILE"
+          pybritive configure update profile-aliases default "AWS SE Demo/696226360299 (se-demo)/S3 Bucket Admin"
       
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
