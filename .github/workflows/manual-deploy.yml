@@ -52,11 +52,11 @@ jobs:
           BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
           BRITIVE_FULL_PROFILE: ${{ secrets.BRITIVE_FULL_PROFILE }}
         run: |
-          # 1. Login with API token
-          pybritive login --token "$BRITIVE_API_TOKEN"
-      
-          # 2. Set tenant (CRITICAL)
+          # 1. Configure tenant FIRST
           pybritive configure tenant --tenant "$BRITIVE_TENANT" --no-prompt
+      
+          # 2. Login with API token (now works!)
+          echo "$BRITIVE_API_TOKEN" | pybritive login --token-stdin
       
           # 3. Set profile alias
           pybritive configure update profile-aliases "$BRITIVE_PROFILE_ALIAS" "$BRITIVE_FULL_PROFILE"
