@@ -1,0 +1,101 @@
+# .github/workflows/manual-deploy.yml
+name: Deploy to Britive Intranet Staging
+
+# -------------------------------------------------
+# ONLY RUN WHEN YOU CLICK “Run workflow”
+# -------------------------------------------------
+on:
+  workflow_dispatch:
+    inputs:
+      justification:
+        description: 'Reason for the deployment (audit)'
+        required: true
+        type: string
+
+# -------------------------------------------------
+# Permissions – OIDC for Britive federation
+# -------------------------------------------------
+permissions:
+  contents: read          # checkout repo
+  id-token: write         # needed for GitHub OIDC → Britive
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging    # optional – can hold bucket name as secret
+    steps:
+
+      # -------------------------------------------------
+      # 1. Checkout the repository
+      # -------------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # -------------------------------------------------
+      # 2. Install Python + Britive CLI
+      # -------------------------------------------------
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'   # newer than your sample, fully supported
+
+      - name: Install pybritive
+        run: pip install pybritive
+
+      # -------------------------------------------------
+      # 3. Configure Britive + write AWS credential_process
+      # -------------------------------------------------
+      - name: Configure Britive & AWS credentials
+        env:
+          BRITIVE_TENANT: ${{ secrets.BRITIVE_TENANT }}           # e.g. demo
+          BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}  # e.g. default
+          BRITIVE_FULL_PROFILE: ${{ secrets.BRITIVE_FULL_PROFILE }}   # e.g. AWS/123750444551 (Sigma Stage)/AWS Creative Profile - S3 Full Access
+        run: |
+          # 1. Tenant config (no prompt, uses GitHub OIDC)
+          pybritive configure tenant --tenant "$BRITIVE_TENANT" --no-prompt
+
+          # 2. Global JSON output (optional but clean)
+          pybritive configure global --tenant "$BRITIVE_TENANT" --format json --no-prompt
+
+          # 3. Alias the full profile path to "default"
+          pybritive configure update profile-aliases "$BRITIVE_PROFILE_ALIAS" "$BRITIVE_FULL_PROFILE"
+
+          # 4. Write AWS credential_process file
+          mkdir -p ~/.aws
+          cat << EOF > ~/.aws/credentials
+          [$BRITIVE_PROFILE_ALIAS]
+          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess -P github-britive --justification "${{ inputs.justification }}" --duration 3600
+          EOF
+
+          # 5. Verify identity
+          aws sts get-caller-identity --profile "$BRITIVE_PROFILE_ALIAS"
+        shell: bash
+
+      # -------------------------------------------------
+      # 4. Deploy the entire site to S3 (no zip)
+      # -------------------------------------------------
+      - name: Sync site to S3
+        env:
+          S3_BUCKET: ${{ secrets.S3_STAGING_BUCKET }}   # e.g. s3://britive-intranet-staging
+          PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
+        run: |
+          echo "Deploying to $S3_BUCKET ..."
+          aws s3 sync . "$S3_BUCKET" \
+            --profile "$PROFILE_ALIAS" \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude "node_modules/*" \
+            --delete \
+            --cache-control "public, max-age=60"   # optional: short cache for demo
+        shell: bash
+
+      # -------------------------------------------------
+      # 5. ALWAYS check-in the Britive profile
+      # -------------------------------------------------
+      - name: Check-in Britive profile
+        if: always()
+        env:
+          PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
+        run: |
+          pybritive checkin "$PROFILE_ALIAS" -P github-britive || true
+        shell: bash
