@@ -27,7 +27,8 @@ jobs:
           pybritive configure tenant --tenant demo --format json --no-prompt
           pybritive configure global --tenant demo --format json --no-prompt
           pybritive configure update profile-aliases default "AWS/123750444551 (Sigma Stage)/AWS Creative Profile - S3 Full Access"
-          export PYBRITIVE_FEDERATION_PROVIDER=github
+
+          export ACTIONS_ID_TOKEN=$(printenv ACTIONS_ID_TOKEN)
 
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
