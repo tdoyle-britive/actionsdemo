@@ -2,10 +2,6 @@ name: Direct Checkout - Deploy Test
 
 on:
   workflow_dispatch:
-    inputs:
-      justification:
-        description: 'Reason'
-        required: true
 
 permissions:
   contents: read
@@ -26,30 +22,44 @@ jobs:
       - name: Install pybritive
         run: pip install pybritive
 
-      - name: Checkout AWS Credentials via OIDC
+      - name: Configure Britive & AWS credentials
         env:
-          BRITIVE_TENANT: demo
-          BRITIVE_PROFILE: "AWS/123750444551 (Sigma Stage)/AWS Creative Profile - S3 Full Access"
-          BRITIVE_JUSTIFICATION: ${{ inputs.justification }}
+          BRITIVE_TENANT: ${{ secrets.BRITIVE_TENANT }}
+          BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
+          BRITIVE_FULL_PROFILE: ${{ secrets.BRITIVE_FULL_PROFILE }}
         run: |
-          # PyBritive auto-uses GitHub OIDC when GITHUB_TOKEN is present
-          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          pybritive configure tenant --tenant "$BRITIVE_TENANT" --no-prompt
+          pybritive configure global --tenant "$BRITIVE_TENANT" --format json --no-prompt
+          pybritive configure update profile-aliases "$BRITIVE_PROFILE_ALIAS" "$BRITIVE_FULL_PROFILE"
+      
+          mkdir -p ~/.aws
+          cat << EOF > ~/.aws/credentials
+          [$BRITIVE_PROFILE_ALIAS]
+          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess -P github --justification "${{ inputs.justification }}"
+          EOF
+      
+          aws sts get-caller-identity --profile "$BRITIVE_PROFILE_ALIAS"
+        shell: bash
 
-          # Checkout creds directly (no credential_process, no login)
-          pybritive checkout "$BRITIVE_PROFILE" \
-            --mode env \
-            --justification "$BRITIVE_JUSTIFICATION"
-
-      - name: Deploy to S3
+      - name: Sync site to S3
+        env:
+          S3_BUCKET: ${{ secrets.S3_STAGING_BUCKET }}
+          PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
         run: |
-          aws s3 sync . s3://britive-intranet-staging \
+          echo "Deploying to $S3_BUCKET ..."
+          aws s3 sync . "$S3_BUCKET" \
+            --profile "$PROFILE_ALIAS" \
             --exclude ".git/*" \
             --exclude ".github/*" \
-            --delete
+            --exclude "node_modules/*" \
+            --delete \
+            --cache-control "public, max-age=60"
+        shell: bash
 
-      - name: Check-in
+      - name: Check-in Britive profile
         if: always()
         env:
-          BRITIVE_PROFILE: "AWS/123750444551 (Sigma Stage)/AWS Creative Profile - S3 Full Access"
+          PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
         run: |
-          pybritive checkin "$BRITIVE_PROFILE" || true
+          pybritive checkin "$PROFILE_ALIAS" -P github || true
+        shell: bash
