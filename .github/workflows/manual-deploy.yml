@@ -55,8 +55,8 @@ jobs:
           # 1. Configure tenant FIRST
           pybritive configure tenant --tenant "$BRITIVE_TENANT" --no-prompt
       
-          # 2. Login with API token (now works!)
-          echo "$BRITIVE_API_TOKEN" | pybritive login --token-stdin
+          # 2. Login with API token using --token (NOT --token-stdin)
+          pybritive login --token "$BRITIVE_API_TOKEN"
       
           # 3. Set profile alias
           pybritive configure update profile-aliases "$BRITIVE_PROFILE_ALIAS" "$BRITIVE_FULL_PROFILE"
