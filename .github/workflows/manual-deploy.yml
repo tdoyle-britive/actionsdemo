@@ -47,25 +47,24 @@ jobs:
       # -------------------------------------------------
       - name: Configure Britive & AWS credentials
         env:
-          BRITIVE_API_TOKEN: ${{ secrets.BRITIVE_API_TOKEN }}
-          BRITIVE_TENANT: ${{ secrets.BRITIVE_TENANT }}
+          BRITIVE_TENANT: ${{ secrets.BRITIVE_TENANT }}           # e.g. demo
           BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
           BRITIVE_FULL_PROFILE: ${{ secrets.BRITIVE_FULL_PROFILE }}
         run: |
-          # 1. Global config with API token auto-login
+          # 1. Global config for tenant (from your sample)
           pybritive configure global --tenant "$BRITIVE_TENANT" --format json --no-prompt
       
           # 2. Set profile alias
           pybritive configure update profile-aliases "$BRITIVE_PROFILE_ALIAS" "$BRITIVE_FULL_PROFILE"
       
-          # 3. Write AWS credential_process
+          # 3. Write AWS credential_process with OIDC federation
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
           [$BRITIVE_PROFILE_ALIAS]
-          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess --justification "${{ inputs.justification }}"
+          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess -P github-britive --justification "${{ inputs.justification }}"
           EOF
       
-          # 4. Verify
+          # 4. Verify (triggers checkout via OIDC)
           aws sts get-caller-identity --profile "$BRITIVE_PROFILE_ALIAS"
         shell: bash
       # -------------------------------------------------
