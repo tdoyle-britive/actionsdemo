@@ -34,17 +34,19 @@ jobs:
           BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
           BRITIVE_FULL_PROFILE: ${{ secrets.BRITIVE_FULL_PROFILE }}
         run: |
-          pybritive configure tenant --tenant "$BRITIVE_TENANT" --no-prompt
-          pybritive configure global --tenant "$BRITIVE_TENANT" --format json --no-prompt
-          pybritive configure update profile-aliases "$BRITIVE_PROFILE_ALIAS" "$BRITIVE_FULL_PROFILE"
+          #pybritive configure tenant --tenant "$BRITIVE_TENANT" --no-prompt
+          #pybritive configure global --tenant "$BRITIVE_TENANT" --format json --no-prompt
+          pybritive configure tenant --tenant demo --no-prompt
+          pybritive configure global --tenant demo --format json --no-prompt
+          pybritive configure update profile-aliases default "$BRITIVE_FULL_PROFILE"
       
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
           [$BRITIVE_PROFILE_ALIAS]
-          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess -P Github-britive --justification "${{ inputs.justification }}"
+          credential_process = pybritive checkout default -m awscredentialprocess -P github-britive
           EOF
       
-          aws sts get-caller-identity --profile "$BRITIVE_PROFILE_ALIAS"
+          aws sts get-caller-identity --profile default
         shell: bash
 
       - name: Sync site to S3
