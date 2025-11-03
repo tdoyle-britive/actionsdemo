@@ -47,30 +47,29 @@ jobs:
       # -------------------------------------------------
       - name: Configure Britive & AWS credentials
         env:
-          BRITIVE_TENANT: ${{ secrets.BRITIVE_TENANT }}           # e.g. demo
-          BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}  # e.g. default
-          BRITIVE_FULL_PROFILE: ${{ secrets.BRITIVE_FULL_PROFILE }}   # e.g. AWS/123750444551 (Sigma Stage)/AWS Creative Profile - S3 Full Access
+          BRITIVE_TENANT: ${{ secrets.BRITIVE_TENANT }}
+          BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
+          BRITIVE_FULL_PROFILE: ${{ secrets.BRITIVE_FULL_PROFILE }}
         run: |
-          # 1. Tenant config (no prompt, uses GitHub OIDC)
+          # 1. Upgrade pybritive to latest
+          pip install --upgrade pybritive
+      
+          # 2. Configure tenant
           pybritive configure tenant --tenant "$BRITIVE_TENANT" --no-prompt
-
-          # 2. Global JSON output (optional but clean)
-          pybritive configure global --tenant "$BRITIVE_TENANT" --format json --no-prompt
-
-          # 3. Alias the full profile path to "default"
+      
+          # 3. Set profile alias
           pybritive configure update profile-aliases "$BRITIVE_PROFILE_ALIAS" "$BRITIVE_FULL_PROFILE"
-
-          # 4. Write AWS credential_process file
+      
+          # 4. Write credential_process (NO --duration!)
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
           [$BRITIVE_PROFILE_ALIAS]
-          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess -P github-britive --justification "${{ inputs.justification }}" --duration 3600
+          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess --justification "${{ inputs.justification }}"
           EOF
-
-          # 5. Verify identity
+      
+          # 5. Verify
           aws sts get-caller-identity --profile "$BRITIVE_PROFILE_ALIAS"
         shell: bash
-
       # -------------------------------------------------
       # 4. Deploy the entire site to S3 (no zip)
       # -------------------------------------------------
