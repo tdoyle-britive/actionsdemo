@@ -64,7 +64,7 @@ jobs:
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
           [$BRITIVE_PROFILE_ALIAS]
-          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess -P github-britive --justification "${{ inputs.justification }}"
+          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess -P TD-GitHubActions-NHI --justification "${{ inputs.justification }}"
           EOF
       
           # 5. Verify
