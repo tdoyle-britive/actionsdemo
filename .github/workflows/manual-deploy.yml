@@ -32,7 +32,7 @@ jobs:
           cat << EOF > ~/.aws/credentials
           [default]
           #credential_process=pybritive checkout default -m awscredentialprocess -P github-britive
-          credential_process=pybritive checkout default --federation-provider github-britive
+          credential_process=pybritive checkout default --federation-provider github
           EOF
           aws sts get-caller-identity
 
