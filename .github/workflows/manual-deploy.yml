@@ -51,8 +51,8 @@ jobs:
           BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
           BRITIVE_FULL_PROFILE: ${{ secrets.BRITIVE_FULL_PROFILE }}
         run: |
-          # Use API token (no browser)
-          echo "$BRITIVE_API_TOKEN" | pybritive login --token-stdin
+          # Use API token (CORRECT FLAG)
+          pybritive login --token "$BRITIVE_API_TOKEN"
       
           # Set profile alias
           pybritive configure update profile-aliases "$BRITIVE_PROFILE_ALIAS" "$BRITIVE_FULL_PROFILE"
