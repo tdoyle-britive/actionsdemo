@@ -47,27 +47,24 @@ jobs:
       # -------------------------------------------------
       - name: Configure Britive & AWS credentials
         env:
-          BRITIVE_TENANT: ${{ secrets.BRITIVE_TENANT }}
+          BRITIVE_API_TOKEN: ${{ secrets.BRITIVE_API_TOKEN }}
           BRITIVE_PROFILE_ALIAS: ${{ secrets.BRITIVE_PROFILE_ALIAS }}
           BRITIVE_FULL_PROFILE: ${{ secrets.BRITIVE_FULL_PROFILE }}
         run: |
-          # 1. Upgrade pybritive to latest
-          pip install --upgrade pybritive
+          # Use API token (no browser)
+          echo "$BRITIVE_API_TOKEN" | pybritive login --token-stdin
       
-          # 2. Configure tenant
-          pybritive configure tenant --tenant "$BRITIVE_TENANT" --no-prompt
-      
-          # 3. Set profile alias
+          # Set profile alias
           pybritive configure update profile-aliases "$BRITIVE_PROFILE_ALIAS" "$BRITIVE_FULL_PROFILE"
       
-          # 4. Write credential_process (NO --duration!)
+          # Write credential_process
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
           [$BRITIVE_PROFILE_ALIAS]
           credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess --justification "${{ inputs.justification }}"
           EOF
       
-          # 5. Verify
+          # Verify
           aws sts get-caller-identity --profile "$BRITIVE_PROFILE_ALIAS"
         shell: bash
       # -------------------------------------------------
