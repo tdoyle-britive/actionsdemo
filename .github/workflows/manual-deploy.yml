@@ -58,7 +58,8 @@ jobs:
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
           [$BRITIVE_PROFILE_ALIAS]
-          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess -P Github --justification "${{ inputs.justification }}"
+          credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess --federation-provider Github --justification "${{ inputs.justification }}"
+          #credential_process = pybritive checkout $BRITIVE_PROFILE_ALIAS -m awscredentialprocess -P Github --justification "${{ inputs.justification }}"
           EOF
       
           aws sts get-caller-identity --profile "$BRITIVE_PROFILE_ALIAS"
