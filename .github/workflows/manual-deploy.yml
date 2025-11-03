@@ -12,13 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@master
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
+      - name: AWS Actions
+        uses: aws-actions/setup-sam@v2
+        with:
+          version: 1.59.0
+          
       - name: Install pybritive
         run: pip3 install pybritive
 
@@ -31,8 +36,8 @@ jobs:
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
           [default]
-          #credential_process=pybritive checkout default -m awscredentialprocess -P github-britive
-          credential_process=pybritive checkout default --federation-provider github-britive
+          credential_process=pybritive checkout default -m awscredentialprocess -P github-britive
+          #credential_process=pybritive checkout default --federation-provider github-britive
           EOF
           aws sts get-caller-identity
 
