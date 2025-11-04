@@ -35,9 +35,14 @@ jobs:
 
           #pybritive checkout default -m awscredentialprocess -P github
           pybritive checkout default -P github-britive
-          #cat ~/.britive/pybritive.config
-          #aws --version
 
+          mkdir -p ~/.aws
+          cat << EOF > ~/.aws/credentials
+          [default]
+          credential_process=pybritive checkout default -P github-britive
+          region=us-west-2
+          EOF
+          
           #mkdir -p ~/.aws
           #cat << EOF > ~/.aws/credentials
           #[default]
