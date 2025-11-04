@@ -1,0 +1,40 @@
+name: deploy
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - uses: aws-actions/setup-sam@v2
+        with:
+          version: 1.59.0
+      - name: Install pybritive
+        run: pip3 install pybritive
+      - name: Checkout Profile
+        run: |
+          mkdir ~/.aws
+          pybritive configure tenant --tenant demo --no-prompt
+          pybritive configure global --tenant demo --format json --no-prompt
+          pybritive configure update profile-aliases default "AWS/724271230776 (Sigma Prod)/GithubActionCiCdExample"
+          cat << EOF > ~/.aws/credentials
+          [default]
+          credential_process=pybritive checkout default -m awscredentialprocess -P github-britive
+          EOF
+          region=$(cat samconfig.toml | grep region | cut -d '"' -f 2)
+          aws configure set default.region "$region"
+          aws sts get-caller-identity
+          cat ~/.britive/pybritive.cache
+
+      - name: Check In Profile
+        run: pybritive checkin default -P github-britive
