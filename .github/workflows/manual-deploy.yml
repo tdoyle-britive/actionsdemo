@@ -42,9 +42,7 @@ jobs:
           credential_process=pybritive checkout default -P github-britive
           region=us-west-2
           EOF
-          
           aws sts get-caller-identity
-
       - name: List S3 Buckets
         run: aws s3 ls
 
