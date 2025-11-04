@@ -34,7 +34,7 @@ jobs:
           pybritive configure update profile-aliases default "AWS SE Demo/696226360299 (se-demo)/S3 Bucket Admin"
 
           #pybritive checkout default -m awscredentialprocess -P github
-          pybritive checkout default -P github-britive
+          #pybritive checkout default -P github-britive
 
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
