@@ -78,6 +78,12 @@ body {
   color: #888;
 }
 
+.centered-image {
+  display: block;  /* Makes it block-level */
+  margin: 0 auto;  /* Centers horizontally */
+  max-width: 100%;  /* Responsive */
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .departments-container {
