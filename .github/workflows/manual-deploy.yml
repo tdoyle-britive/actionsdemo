@@ -32,11 +32,14 @@ jobs:
           pybritive configure tenant --tenant demo --format json --no-prompt
           pybritive configure global --tenant demo --format json --no-prompt
           pybritive configure update profile-aliases default "AWS SE Demo/696226360299 (se-demo)/S3 Bucket Admin"
+          cat ~/.britive/pybritive.config
+          
 
           mkdir -p ~/.aws
           cat << EOF > ~/.aws/credentials
           [default]
-          credential_process=pybritive checkout default -m awscredentialprocess -P github-britive
+          credential_process=pybritive checkout default -m awscredentialprocess -P github
+          region=us-west-2
           EOF
           aws sts get-caller-identity
 
@@ -44,4 +47,4 @@ jobs:
         run: aws s3 ls
 
       - name: Check In Britive Profile
-        run: pybritive checkin default -P github-britive
+        run: pybritive checkin default -P github
