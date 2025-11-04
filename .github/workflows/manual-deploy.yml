@@ -32,15 +32,17 @@ jobs:
           pybritive configure tenant --tenant demo --format json --no-prompt
           pybritive configure global --tenant demo --format json --no-prompt
           pybritive configure update profile-aliases default "AWS SE Demo/696226360299 (se-demo)/S3 Bucket Admin"
-          cat ~/.britive/pybritive.config
-          aws --version
 
-          mkdir -p ~/.aws
-          cat << EOF > ~/.aws/credentials
-          [default]
-          credential_process=pybritive checkout default -m awscredentialprocess -P github
-          region=us-west-2
-          EOF
+          pybritive checkout default -m awscredentialprocess -P github
+          #cat ~/.britive/pybritive.config
+          #aws --version
+
+          #mkdir -p ~/.aws
+          #cat << EOF > ~/.aws/credentials
+          #[default]
+          #credential_process=pybritive checkout default -m awscredentialprocess -P github
+          #region=us-west-2
+          #EOF
           aws sts get-caller-identity
 
       - name: List S3 Buckets
