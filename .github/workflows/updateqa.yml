@@ -1,0 +1,48 @@
+name: Deploy to Britive Intranet QA Env
+
+on:
+  workflow_dispatch:
+#    inputs:
+#      justification:
+#        description: 'Reason'
+#       required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pybritive
+        run: pip install pybritive
+
+      - name: Configure and Checkout
+        run: |
+          mkdir -p ~/.aws
+          pybritive configure tenant --tenant demo --no-prompt
+          pybritive configure global --tenant demo --format json --no-prompt
+          pybritive configure update profile-aliases default "AWS SE Demo/696226360299 (se-demo)/S3 Bucket Admin"
+          cat << EOF > ~/.aws/credentials
+          [default]
+          credential_process=pybritive checkout default -m awscredentialprocess -P github-britive
+          EOF
+          aws sts get-caller-identity
+      - name: Deploy to S3
+        run: |
+          aws s3 sync . s3://britive-intranet-qa \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --delete
+      - name: Check In
+        if: always()
+        run: pybritive checkin default -P github-britive || true
