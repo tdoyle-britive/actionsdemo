@@ -13,5 +13,15 @@
     "name": "Engineering",
     "description": "Build the future of identity security with scalable, automated PAM platforms.",
     "image": "images/engineering.svg"
+  },
+    {
+    "name": "HR",
+    "description": "Build the future of identity security with scalable, automated PAM platforms.",
+    "image": "images/hr.svg"
+  },
+  {
+    "name": "Finance",
+    "description": "Build the future of identity security with scalable, automated PAM platforms.",
+    "image": "images/finance.svg"
   }
 ]
