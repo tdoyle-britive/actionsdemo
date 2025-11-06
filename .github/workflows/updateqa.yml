@@ -1,4 +1,4 @@
-name: Deploy to Britive Intranet Staging
+name: Deploy to Britive Intranet QA Env
 
 on:
   workflow_dispatch:
@@ -37,14 +37,12 @@ jobs:
           credential_process=pybritive checkout default -m awscredentialprocess -P github-britive
           EOF
           aws sts get-caller-identity
-
       - name: Deploy to S3
         run: |
-          aws s3 sync . s3://britive-intranet-staging \
+          aws s3 sync . s3://britive-intranet-qa \
             --exclude ".git/*" \
             --exclude ".github/*" \
             --delete
-
       - name: Check In
         if: always()
         run: pybritive checkin default -P github-britive || true
