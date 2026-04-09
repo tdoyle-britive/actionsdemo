@@ -31,7 +31,7 @@ jobs:
           mkdir -p ~/.aws
           pybritive configure tenant --tenant demo --no-prompt
           pybritive configure global --tenant demo --format json --no-prompt
-          pybritive configure update profile-aliases default "AWS SE Demo/696226360299 (se-demo)/S3 Bucket Admin"
+          pybritive configure update profile-aliases default "AWS SE Organization/696226360299 (se-demo)/S3 Bucket Admin"
           cat << EOF > ~/.aws/credentials
           [default]
           credential_process=pybritive checkout default -m awscredentialprocess -P github-britive
